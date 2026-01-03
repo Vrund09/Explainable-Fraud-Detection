@@ -976,7 +976,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### **⭐ If this project helped you, please consider giving it a star! ⭐**
 
-**Made with ❤️ by the AI Engineering Team**
+**Made with a vision by Vrund Patel**
 
 </div>
 
