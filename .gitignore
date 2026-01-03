@@ -1,0 +1,510 @@
+# Explainable Fraud Detection - .gitignore
+
+# ========================================
+# Python
+# ========================================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff
+instance/
+.webassets-cache
+
+# Scrapy stuff
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+.pdm.toml
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+fraud-detection-env/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# ========================================
+# Data Files
+# ========================================
+# Raw data (exclude the actual PaySim dataset)
+data/raw/*.csv
+data/raw/*.json
+data/raw/*.parquet
+data/raw/*.xlsx
+
+# Processed data
+data/processed/*.csv
+data/processed/*.json
+data/processed/*.parquet
+data/processed/*.pkl
+
+# Temporary data files
+data/temp/
+data/cache/
+
+# Large data files
+*.h5
+*.hdf5
+*.feather
+
+# ========================================
+# Model Files
+# ========================================
+# Trained models
+models/
+checkpoints/
+*.pth
+*.pt
+*.pkl
+*.joblib
+*.model
+*.h5
+
+# Model artifacts
+model_artifacts/
+experiments/
+
+# ========================================
+# MLflow
+# ========================================
+mlruns/
+mlflow.db
+.mlflow/
+
+# MLflow artifacts
+mlflow-artifacts/
+
+# ========================================
+# DVC (Data Version Control)
+# ========================================
+.dvc/cache/
+.dvc/tmp/
+.dvc/plots/
+
+# DVC files (keep .dvc files but ignore cached data)
+# *.dvc
+
+# ========================================
+# Neo4j
+# ========================================
+# Neo4j database files
+neo4j/
+*.db
+graph.db/
+
+# Neo4j logs
+neo4j-logs/
+
+# ========================================
+# Logs and Monitoring
+# ========================================
+logs/
+*.log
+log/
+
+# Application logs
+app.log
+error.log
+access.log
+debug.log
+
+# Tensorboard logs
+runs/
+tensorboard_logs/
+
+# ========================================
+# Configuration and Secrets
+# ========================================
+# Environment variables
+.env.local
+.env.production
+.env.staging
+.env.development
+
+# Configuration files with sensitive data
+config.local.py
+config.prod.py
+secrets.json
+credentials.json
+
+# API keys and tokens
+.api_keys
+.tokens
+
+# ========================================
+# Development Tools
+# ========================================
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Vim
+*.swp
+*.swo
+*.swn
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# ========================================
+# Docker
+# ========================================
+# Docker override files
+docker-compose.override.yml
+docker-compose.local.yml
+
+# Docker volumes
+docker-volumes/
+
+# ========================================
+# Testing
+# ========================================
+# Test databases
+test.db
+test.sqlite
+test_mlflow.db
+
+# Test outputs
+test-results/
+test-reports/
+
+# Playwright tests
+/tests/test-results/
+/playwright-report/
+/playwright/.cache/
+
+# ========================================
+# Documentation
+# ========================================
+# Generated documentation
+docs/build/
+docs/site/
+
+# Jupyter notebook outputs
+*.nbconvert.ipynb
+
+# ========================================
+# Operating System
+# ========================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+
+# Dump file
+*.stackdump
+
+# Folder config file
+[Dd]esktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk
+
+# Linux
+*~
+
+# temporary files which can be created if a process still has a handle open of a deleted file
+.fuse_hidden*
+
+# KDE directory preferences
+.directory
+
+# Linux trash folder which might appear on any partition or disk
+.Trash-*
+
+# .nfs files are created when an open file is removed but is still being accessed
+.nfs*
+
+# ========================================
+# Cloud and Deployment
+# ========================================
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Kubernetes
+*.kubeconfig
+kubeconfig
+
+# Helm
+charts/
+helm-charts/
+
+# AWS
+.aws/
+
+# Google Cloud
+.gcloud/
+service-account-key.json
+gcp-credentials.json
+
+# Azure
+.azure/
+
+# ========================================
+# Monitoring and Observability
+# ========================================
+# Prometheus
+prometheus_data/
+
+# Grafana
+grafana_data/
+
+# Jaeger
+jaeger_data/
+
+# ========================================
+# Security
+# ========================================
+# Security scan reports
+bandit-report.json
+safety-report.json
+trivy-results.sarif
+
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.csr
+
+# ========================================
+# Temporary and Cache
+# ========================================
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Cache directories
+.cache/
+cache/
+
+# Node.js (if using any frontend tools)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ========================================
+# Project-specific
+# ========================================
+# Experiment results
+experiments/
+results/
+
+# Generated reports
+reports/
+
+# Backup files
+*.bak
+*.backup
+
+# Archive files (unless they're intentional releases)
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Large media files (unless intentionally tracked)
+*.mp4
+*.avi
+*.mkv
+*.mov
+*.wmv
+
+# ========================================
+# Keep these files (negative patterns)
+# ========================================
+# Keep important configuration templates
+!config.template.py
+!.env.example
+!docker-compose.template.yml
+
+# Keep sample data (small files for testing)
+!data/samples/
+!data/examples/
+
+# Keep documentation assets
+!docs/images/
+!docs/assets/
+
+# Keep GitHub workflows and templates
+!.github/
+!.github/workflows/
+!.github/ISSUE_TEMPLATE/
+!.github/PULL_REQUEST_TEMPLATE.md
+
+# Keep DVC configuration (but not the cache)
+!.dvc/config
+!.dvc/.gitignore
+
+

@@ -1,0 +1,21 @@
+{
+  "monitoring_system": "Simple Performance Monitoring",
+  "components": [
+    "Health monitoring with real-time status",
+    "Metrics collection for performance tracking",
+    "Performance dashboard for visualization",
+    "Error tracking and system health alerts"
+  ],
+  "capabilities": [
+    "Real-time system health monitoring",
+    "Performance metrics tracking",
+    "Visual dashboard for presentations",
+    "Automated metrics collection"
+  ],
+  "access_points": [
+    "monitoring/performance_dashboard.html - Visual dashboard",
+    "src/health_monitoring.py - Health system",
+    "src/metrics_system.py - Metrics collection",
+    "monitoring/data/ - Stored metrics"
+  ]
+}
