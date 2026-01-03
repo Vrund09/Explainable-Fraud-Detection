@@ -8,7 +8,7 @@ A comprehensive end-to-end system for detecting financial fraud using **Graph Ne
 
 ## 🎯 **Project Overview**
 
-This is a two-semester final year project that implements an advanced fraud detection system with the following key features:
+A production-grade fraud detection system built to demonstrate the practical integration of Graph Neural Networks with Explainable AI. Key features include:
 
 - 🧠 **Graph Neural Network**: Uses GraphSAGE architecture to detect complex fraud patterns in transaction networks
 - 🤖 **AI Explanations**: LangChain-powered agent provides human-readable explanations using Google Gemini LLM
@@ -26,15 +26,14 @@ This is a two-semester final year project that implements an advanced fraud dete
 **📖 [→ TECHNICAL_BRIEFING_README.md](TECHNICAL_BRIEFING_README.md)**
 
 **This comprehensive technical briefing document provides:**
-- **🔍 Complete project explanation from scratch**
+- **🔍 Complete system explanation from scratch**
 - **💡 Detailed how/why analysis for every component**  
 - **🏗️ Technical architecture deep dives with business rationale**
 - **📊 Performance analysis and industry comparisons**
 - **💼 Business impact, ROI, and strategic value**
-- **🎓 Academic contribution and research methodology**
 - **🚀 Production deployment and scalability analysis**
 
-**Perfect for academic evaluation, industry assessment, and comprehensive project understanding.**
+**Perfect for technical evaluation, industry assessment, and comprehensive system understanding.**
 
 ---
 
@@ -931,15 +930,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### **Acknowledgments**
 - PaySim dataset creators at NTNU
-- DGL development team
+- Deep Graph Library (DGL) development team
 - FastAPI and Pydantic communities  
 - Neo4j graph database team
 - Google Gemini API team
-
-### **Special Thanks**
-- Academic supervisors and mentors
 - Open source community contributors
-- Beta testers and early adopters
 
 ---
 
