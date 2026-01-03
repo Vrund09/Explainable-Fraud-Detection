@@ -37,8 +37,11 @@ class WorkingExplanationSystem:
         """Test Gemini AI availability"""
         try:
             import google.generativeai as genai
-            genai.configure(api_key='AIzaSyBssiEYJb2rJQdMeKCvVVCSAJT_uyLtpfw')
-            return True
+            api_key = os.getenv('GEMINI_API_KEY')
+            if api_key:
+                genai.configure(api_key=api_key)
+                return True
+            return False
         except:
             return False
     
