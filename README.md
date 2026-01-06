@@ -945,8 +945,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 🐛 **Issues**: Open an issue in the GitHub repository
 
 ### **Contact Information**
-- 📧 **Email**: [Your Email]
-- 🔗 **LinkedIn**: [Your LinkedIn Profile]
+- 📧 **Email**: Vrund.patel2020@gmail.com
+- 🔗 **LinkedIn**: www.linkedin.com/in/vrund-patel09
 
 ---
 
