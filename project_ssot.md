@@ -1,0 +1,33 @@
+---
+title: "Explainable AI for Graph-Based Fraud Detection"
+type: "Personal Project"
+date_start: "2026-01"
+date_end: "2026-01"
+role: "AI/ML Engineer"
+tech_stack: ["Python", "FastAPI", "Pydantic", "PyTorch", "DGL", "PyTorch Geometric", "pandas", "NumPy", "scikit-learn", "Neo4j", "LangChain", "Google Gemini", "MLflow", "DVC", "Docker", "GitHub Actions", "Jupyter", "KaggleHub"]
+repo_link: "https://github.com/Vrund09/Explainable-Fraud-Detection.git"
+---
+
+## 1. Elevator Pitch
+This project is an end-to-end explainable fraud detection platform for financial risk, fraud operations, and compliance teams that need to identify suspicious money-movement patterns while still understanding why a transaction was flagged. It converts the PaySim transaction corpus into a graph, trains a GraphSAGE-based fraud model, exposes prediction APIs through FastAPI, and layers Neo4j plus Gemini-powered explanations on top for analyst-friendly investigation workflows.
+
+## 2. Architecture & Technical Deep Dive
+*   **Problem Solved:** Traditional row-wise fraud models miss relational behavior such as coordinated account activity, repeat counterparties, and suspicious network structure; this codebase reframes fraud detection as a graph-learning problem and adds an explanation layer so flagged transactions can be reviewed by humans instead of treated as black-box outputs.
+*   **System Design:** The repository is organized into a clear pipeline: `src/data_processing/graph_constructor.py` downloads or loads PaySim, validates the schema, engineers transaction features, aggregates user-level features, and outputs graph-ready node and edge CSVs before optionally ingesting them into Neo4j with indexes and constraints. `src/gnn_model/model.py`, `src/gnn_model/training.py`, and `src/gnn_model/predict.py` provide the DGL/PyTorch GraphSAGE model, BCEWithLogitsLoss-based training loop, MLflow experiment tracking, checkpointing, and model-loading logic. `src/api/main.py` exposes health, status, single prediction, batch prediction, explanation, and prediction-history endpoints with Pydantic validation, request IDs, and background logging. `src/explainability/agent.py` adds a LangChain agent that queries Neo4j context and uses Gemini to generate analyst-readable explanations, with fallback explanations if Neo4j or the LLM is unavailable. Docker and GitHub Actions round out the operational layer with containerized deployment, linting, security scans, tests, and multi-architecture image builds. Important implementation note: the live FastAPI prediction endpoints currently call `FraudPredictor.predict_fraud()` without supplying a full graph, so the shipped API path falls back to the simplified heuristic scorer unless graph artifacts are loaded and wired into inference.
+*   **Key Challenges Overcome:** One challenge was converting flat transaction logs into graph-native training data without losing fraud labels, directionality, or transaction semantics; the code handles this through schema validation, feature engineering, user aggregation, active-user filtering, normalized edge weights, and batched Neo4j ingestion. Another challenge was building a resilient end-to-end system despite class imbalance and dependency volatility; the training stack supports weighted binary loss, gradient clipping, learning-rate scheduling, early stopping, and MLflow logging, while the serving stack degrades gracefully when MLflow models, Neo4j context, or Gemini explanations are unavailable.
+
+## 3. The STAR Breakdown
+*   **Situation:** Fraud detection systems in financial workflows need more than raw classification accuracy; they also need to capture relational fraud patterns and produce explanations that fraud analysts, auditors, and compliance stakeholders can act on.
+*   **Task:** Build a portfolio-grade prototype that ingests PaySim transaction data, transforms it into a graph, trains a GNN-based fraud model, exposes a usable API, and provides explanation tooling suitable for technical demos and interview-level deep dives.
+*   **Action:** Implemented a graph-construction pipeline with automated dataset download, feature engineering, CSV persistence, and Neo4j ingestion; built a GraphSAGE classifier and MLflow-backed training workflow with checkpointing and evaluation metrics; created FastAPI endpoints for health, model status, single and batch inference, and explanation generation; integrated a LangChain plus Gemini investigator over Neo4j context; and added Docker, environment-driven configuration, monitoring helpers, and GitHub Actions automation for quality and deployment workflows.
+*   **Result:** Produced an end-to-end explainable fraud detection system with 7 API endpoints, a 2-stage Docker deployment path, CI/security automation, and documentation/monitoring artifacts that report a 94% F1 score on the PaySim dataset; real-world analyst-efficiency, fraud-loss reduction, and production-latency metrics remain [INSERT METRIC].
+
+## 4. Pre-Drafted Resume Bullets
+*   Architected a modular fraud detection platform with Python, FastAPI, Neo4j, and MLflow, exposing 7 REST endpoints for health, scoring, batch inference, explanation, and model operations.
+*   Designed a graph-data pipeline with pandas feature engineering and batched Neo4j ingestion, transforming PaySim transaction logs into 17 user-level features and 15 edge attributes for downstream model training.
+*   Engineered a GraphSAGE classifier in PyTorch and DGL with multi-layer message passing and MLP classification, enabling graph-aware fraud modeling over a documented 6.36M-transaction dataset.
+*   Implemented an imbalanced-learning training workflow with BCEWithLogitsLoss, gradient clipping, learning-rate scheduling, and early stopping, driving a reported 94% F1 score on PaySim.
+*   Containerized the FastAPI service with a 2-stage Python 3.11 Docker build, non-root runtime hardening, and health checks, enabling portable deployment across 2 target CPU architectures.
+*   Automated quality and release workflows with GitHub Actions, Black, isort, flake8, mypy, pytest, Bandit, and Safety, standardizing 4 CI/CD jobs from source validation through container build.
+*   Delivered LangChain plus Gemini explanation workflows backed by Neo4j transaction context, positioning fraud investigators to reduce manual review time by [INSERT METRIC].
+*   Created an explainable fraud analytics demo for fraud-risk and compliance stakeholders, supporting [INSERT METRIC] improvement in decision transparency across flagged transactions.
