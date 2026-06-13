@@ -1,0 +1,154 @@
+# 05 — Model Artifact Recovery & Retraining
+
+| Field | Value |
+| --- | --- |
+| Spec ID | 05 |
+| Status | Not started |
+| Depends on | 03 |
+| Blocks | 06 (inference needs verified artifacts) |
+| Est. effort | 2–5 days (more if full retrain) |
+| Risk | High (artifact format unknown; feature-dim mismatch) |
+
+## Objective
+Turn the orphaned `paysim_94_fraud_model_final` file into a **verified, loadable, documented** set of inference artifacts, and resolve the feature-dimension mismatch (G2, G11, G14). Produce: a model loadable by `GraphSAGEClassifier`, the preprocessing artifacts (`scaler`, `feature_names`, `node_mapping`), the graph used for inference, an **eval report** that substantiates (or corrects) the "94% F1" claim, and MLflow registration so `load_production_model()` works.
+
+There are two paths. **Path A (verify-only)** is the fast path if the existing artifact is usable. **Path B (retrain)** reproduces the artifact from the training notebook. Start with Path A; fall back to Path B only if the artifact is unusable.
+
+## Background & current state
+- Root file `paysim_94_fraud_model_final` (≈5.9 MB, **no extension**) — never referenced (G2).
+- `load_production_model()` loads `models:/fraud-detection-model/Production` then "None"-stage versions (`predict.py:475-508`) — none exist on a fresh clone.
+- `GraphSAGEClassifier` architecture (`model.py:51-126`): `input_dim`→`hidden_dim`(128)→`output_dim`(64)→MLP→1 logit; `get_model_summary()` exposes the arch dict.
+- Config dims: `GNN_INPUT_DIM=10`, `GNN_HIDDEN_DIM=128`, `GNN_OUTPUT_DIM=64` (`config.py:89-91`).
+- SSOT says **17 user features / 15 edge attributes** (`project_ssot.md:27`) and reports 94% F1 with business metrics `[INSERT METRIC]` (`:23,29`).
+- Training pipeline exists: `src/gnn_model/training.py` (708 lines, MLflow + metrics + early stopping) and `PaySim_Hypertuned_Training.ipynb` (101 KB).
+- Graph builder: `src/data_processing/graph_constructor.py` (PaySim → nodes/edges CSV → optional Neo4j).
+
+## Prerequisites
+- Spec `03` (torch/dgl installed).
+- For Path B: the PaySim dataset (auto-download via `kagglehub`, see README "Quick Start").
+
+## Out of scope
+- Wiring the artifact into the live API (`06`).
+
+## Implementation steps
+
+### Step 0 — Create an artifact directory convention
+All inference artifacts live under `models/production/`:
+```
+models/production/
+├── model.pt              # state_dict + model_config
+├── scaler.pkl            # fitted StandardScaler
+├── feature_names.json    # ordered node feature columns
+├── node_mapping.json     # user_id -> node index
+├── graph.bin             # DGL graph used for inference (dgl.save_graphs)
+├── metrics.json          # eval metrics (F1, PR-AUC, ROC-AUC, confusion matrix)
+└── model_card.md         # provenance + intended use + limitations
+```
+
+### Step 1 — Inspect the existing artifact (Path A discovery)
+Write `scripts/inspect_artifact.py` to determine the file's format and shape:
+```python
+import torch, sys
+obj = torch.load("paysim_94_fraud_model_final", map_location="cpu")
+print("type:", type(obj))
+if isinstance(obj, dict):
+    print("keys:", list(obj.keys())[:20])
+    sd = obj.get("model_state_dict", obj)
+    for k, v in list(sd.items())[:50]:
+        if hasattr(v, "shape"):
+            print(k, tuple(v.shape))
+```
+Run it and record output in `PROGRESS.md`. Decide:
+- If it's a `state_dict` (or `{model_state_dict, model_config}`) for a GraphSAGE: **Path A**.
+- If it's a full pickled `nn.Module`: load directly, then re-save as a `state_dict` for portability.
+- If it's something else / fails to load (e.g., pickled with incompatible classes): **Path B**.
+
+**Infer the true input dim** from the first `SAGEConv` weight shape (e.g., `convs.0.fc_neigh.weight` has shape `[hidden, input_dim]`). This tells you whether the model expects 10 or 17 features (resolves G11).
+
+### Step 2 (Path A) — Reconcile config & rebuild loader
+- Set `config.GNN_INPUT_DIM` to the **measured** input dim from Step 1.
+- Build `model_config` matching the artifact (`input_dim`, `hidden_dim`, `output_dim`, `num_layers`, `dropout_rate`, `classifier_hidden_dim`, `aggregator_type`) and confirm `GraphSAGEClassifier(**model_config).load_state_dict(sd)` succeeds with `strict=True`.
+- Re-save as `models/production/model.pt`:
+```python
+torch.save({"model_state_dict": model.state_dict(), "model_config": model_config}, "models/production/model.pt")
+```
+
+### Step 3 — Recover/define the feature pipeline
+The model's input features must be reproducible at inference. From `graph_constructor.py`, identify the exact ordered list of **node (user) features** the training used. Persist them to `feature_names.json`. If the artifact expects 17 features, ensure the feature builder emits those 17 in that order. If the scaler is missing, refit a `StandardScaler` on the training node features and save `scaler.pkl` (document that it was refit).
+
+> If the original `node_mapping` (user_id → index) cannot be recovered, it must be regenerated by rebuilding the graph from the same processed data (Path B Step B2). Inference (`06`) needs this mapping to locate a user's node.
+
+### Step 4 — Build & save the inference graph
+Use `graph_constructor.py` outputs (`graph_nodes.csv`, `graph_edges.csv`) and `GraphDataLoader` (`model.py:336+`) to construct the DGL graph with node features in `feature_names.json` order, then:
+```python
+import dgl
+dgl.save_graphs("models/production/graph.bin", [g])
+```
+Save the corresponding `node_mapping.json`.
+
+### Step 5 — Produce an honest eval report
+Run evaluation on a held-out split (reuse `training.py` metric utilities) and write `metrics.json` with `f1`, `precision`, `recall`, `roc_auc`, `pr_auc` (average precision), `support`, and the confusion matrix. **Compare to the claimed 94% F1**:
+- If reproduced: cite the run id and threshold in `model_card.md`.
+- If not: record the actual number; spec `14` updates the SSOT/README to match (no fabricated claims). PR-AUC is the more honest headline for imbalanced fraud — include it prominently.
+
+### Step 6 — Register with MLflow
+Make `load_production_model()` work without a remote registry. Add `scripts/register_model.py`:
+```python
+import mlflow, mlflow.pytorch, torch
+from src.gnn_model.model import GraphSAGEClassifier
+from src.config import config
+
+ckpt = torch.load("models/production/model.pt", map_location="cpu")
+model = GraphSAGEClassifier(**ckpt["model_config"]); model.load_state_dict(ckpt["model_state_dict"]); model.eval()
+mlflow.set_tracking_uri(config.MLFLOW_TRACKING_URI)
+mlflow.set_experiment(config.MLFLOW_EXPERIMENT_NAME)
+with mlflow.start_run(run_name="register-production"):
+    mlflow.log_metrics({"f1": ..., "pr_auc": ...})   # from metrics.json
+    info = mlflow.pytorch.log_model(model, artifact_path="model", registered_model_name=config.MLFLOW_MODEL_NAME)
+# then transition the new version to the "Production" stage via MlflowClient
+```
+> Spec `06` will prefer loading the **local** `models/production/model.pt` (robust, no MLflow needed) and treat MLflow as optional. Registration here is for completeness and the `/model/status` story.
+
+### Step 7 (Path B) — Reproducible retrain (only if Path A failed)
+- **B1:** Download PaySim (`python scripts/download_dataset.py` or `GraphConstructor().process_paysim_data(use_kagglehub=True)`).
+- **B2:** Run `graph_constructor` to produce node/edge CSVs + `node_mapping`.
+- **B3:** Port the notebook's training into a CLI: `python -m src.gnn_model.training --epochs N ...` (the module already has the pipeline; add an `argparse`/`__main__` entry if missing). Use seeds for reproducibility.
+- **B4:** Save all artifacts from Step 0 layout, write `metrics.json`, register via Step 6.
+- **B5:** Document exact commands + dataset hash in `model_card.md`.
+
+## Contract / data changes
+- New `models/production/` artifact set (git-ignore large binaries; commit `metrics.json`, `feature_names.json`, `model_card.md`; store `model.pt`/`graph.bin` via DVC or document download).
+- `config.GNN_INPUT_DIM` corrected to the true value.
+
+## Acceptance criteria
+- [ ] `scripts/inspect_artifact.py` output recorded; artifact format and true input dim documented in `PROGRESS.md`.
+- [ ] `models/production/model.pt` loads into `GraphSAGEClassifier` with `strict=True` and `model.eval()` runs a forward pass on a tiny sample graph without error.
+- [ ] `feature_names.json`, `scaler.pkl`, `node_mapping.json`, `graph.bin` exist and are mutually consistent (feature count == model input dim == scaler `n_features_in_`).
+- [ ] `metrics.json` exists with real F1 + PR-AUC; `model_card.md` documents provenance and whether 94% F1 was reproduced.
+- [ ] `config.GNN_INPUT_DIM` matches the artifact's true input dim.
+- [ ] (If MLflow path used) `load_production_model()` returns a predictor with a loaded model, or `06` documents the local-load fallback.
+
+## Test plan
+Create `tests/unit/test_model.py`:
+- build a tiny random DGL graph with `GNN_INPUT_DIM` features; assert `GraphSAGEClassifier(**cfg)(g, feats)` returns shape `[n, 1]`.
+- assert `predict_proba` outputs in `[0,1]`.
+- assert loading `models/production/model.pt` (skip with `pytest.mark.skipif` if the file is absent in CI) reconstructs the model and matches `feature_names.json` length.
+
+## Validation
+```bash
+python scripts/inspect_artifact.py
+python -c "import torch,dgl,json; from src.gnn_model.model import GraphSAGEClassifier; \
+ck=torch.load('models/production/model.pt',map_location='cpu'); m=GraphSAGEClassifier(**ck['model_config']); \
+m.load_state_dict(ck['model_state_dict']); print('loaded params:', m.count_parameters())"
+python -c "import json; n=json.load(open('models/production/feature_names.json')); print('features:', len(n))"
+pytest tests/unit/test_model.py -q
+```
+
+## Rollback / fallback
+If neither path yields a trustworthy artifact, **stop and surface it**. Do not ship a fake model. Spec `06` has a clearly-labeled heuristic fallback that must remain honestly labeled until a real artifact exists.
+
+## Definition of Done
+Verified artifacts in `models/production/`, honest `metrics.json`/`model_card.md`, corrected input dim, model loads and runs a forward pass; commit on `feat/spec-05-model-artifacts`.
+
+## References
+- `paysim_94_fraud_model_final` (root), `src/gnn_model/model.py:51-126,275-333,336+`, `src/gnn_model/training.py`, `src/gnn_model/predict.py:74-152,475-508`, `src/data_processing/graph_constructor.py`, `src/config.py:89-129`, `project_ssot.md:23,27,29`.
